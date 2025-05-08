@@ -21,5 +21,5 @@ app.get('/', (req, res) => {
 
 // Démarrage du serveur
 app.listen(PORT, () => {
-  console.log(`🚀 Serveur en cours d’exécution sur http://localhost:${PORT}`);
+  console.log(`Serveur en cours d’exécution sur http://localhost:${PORT}`);
 });
