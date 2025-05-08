@@ -14,7 +14,7 @@ async function createUser() {
       if (err) {
         console.error('Erreur lors de l\'insertion :', err.message);
       } else {
-        console.log('✅ Utilisateur inséré avec succès, ID =', result.insertId);
+        console.log('Utilisateur inséré avec succès, ID =', result.insertId);
       }
       db.end();
     });
