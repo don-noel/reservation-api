@@ -171,8 +171,8 @@
             <td>${booking.email}</td>
             <td>${formatDate(booking.reservation_date)}</td>
             <td>
-              <button onclick="editBooking(${booking.id}, '${booking.user_name}', '${booking.email}', '${booking.reservation_date}')">✏️ Modifier</button>
-              <button onclick="deleteBooking(${booking.id})">🗑️ Supprimer</button>
+              <button onclick="editBooking(${booking.id}, '${booking.user_name}', '${booking.email}', '${booking.reservation_date}')">Modifier</button>
+              <button onclick="deleteBooking(${booking.id})">Supprimer</button>
             </td>
           `;
           table.appendChild(row);
