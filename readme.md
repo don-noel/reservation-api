@@ -51,7 +51,7 @@ CREATE TABLE bookings (
   reservation_date DATE
 );
 
-## Tu peux ajouter manuellement un utilisateur avec un mot de passe haché (via bcrypt) ou via une route POST /api/createUser si elle existe
+"Tu peux ajouter manuellement un utilisateur avec un mot de passe haché (via bcrypt) ou via une route POST /api/createUser si elle existe"
 
 4. Créer un fichier .env à la racine du projet avec les informations suivantes :
 
