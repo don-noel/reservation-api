@@ -27,10 +27,10 @@ Ce projet est une application web complète permettant de gérer des réservatio
 ## Installation
 
 1. Cloner le projet
-
-```bash
-git clone https://github.com/votre-utilisateur/reservation-api.git
-cd reservation-api
+    ```bash
+    
+  git clone https://github.com/votre-utilisateur/reservation-api.git
+  cd reservation-api
 
 2. Installer les dépendances Node.js
 
