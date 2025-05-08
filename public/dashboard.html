@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Tableau de bord</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f4f6f8;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+      margin-bottom: 30px;
+    }
+
+    h2 {
+      color: #333;
+      margin-top: 30px;
+    }
+
+    button, input[type="submit"] {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover, input[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    #bookingForm {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    input[type="text"], input[type="email"], input[type="date"] {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      width: 200px;
+    }
+
+    #formMessage {
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+    .success {
+      color: green;
+    }
+
+    .error {
+      color: red;
+    }
+
+    table {
+      width: 100%;
+      background-color: white;
+      border-collapse: collapse;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.08);
+    }
+
+    th, td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: left;
+    }
+
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+
+    td button {
+      margin-right: 6px;
+    }
+
+    #logoutBtn {
+      float: right;
+      background-color: #dc3545;
+    }
+
+    #logoutBtn:hover {
+      background-color: #c82333;
+    }
+
+    @media screen and (max-width: 768px) {
+      #bookingForm {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      input[type="text"], input[type="email"], input[type="date"] {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button id="logoutBtn" onclick="logout()">Se déconnecter</button>
+  <h1>Bienvenue sur le tableau de bord</h1>
+  <p id="welcome"></p>
+
+  <h2>Créer une réservation</h2>
+  <form id="bookingForm">
+    <input type="text" id="user_name" placeholder="Nom" required>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="date" id="reservation_date" required>
+    <input type="submit" id="submitBtn" value="Réserver">
+  </form>
+  <p id="formMessage"></p>
+
+  <h2>Réservations</h2>
+  <div id="bookings"></div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token || token === 'undefined' || token === null) {
+      alert('Token manquant. Redirection vers login...');
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+
+    const apiUrl = 'http://localhost:3000/bookings';
+    let currentEditId = null;
+
+    document.getElementById('welcome').innerText = 'Token trouvé. Prêt pour les requêtes sécurisées.';
+
+    function formatDate(dateStr) {
+      const date = new Date(dateStr);
+      return date.toISOString().split('T')[0];
+    }
+
+    async function fetchBookings() {
+      const res = await fetch(apiUrl, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        const table = document.createElement('table');
+        table.innerHTML = `
+          <tr>
+            <th>ID</th>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Date</th>
+            <th>Action</th>
+          </tr>
+        `;
+        data.forEach(booking => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${booking.id}</td>
+            <td>${booking.user_name}</td>
+            <td>${booking.email}</td>
+            <td>${formatDate(booking.reservation_date)}</td>
+            <td>
+              <button onclick="editBooking(${booking.id}, '${booking.user_name}', '${booking.email}', '${booking.reservation_date}')">✏️ Modifier</button>
+              <button onclick="deleteBooking(${booking.id})">🗑️ Supprimer</button>
+            </td>
+          `;
+          table.appendChild(row);
+        });
+        document.getElementById('bookings').innerHTML = '';
+        document.getElementById('bookings').appendChild(table);
+      } else {
+        alert(data.message || "Erreur serveur");
+      }
+    }
+
+    fetchBookings();
+
+    document.getElementById('bookingForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+
+      const user_name = document.getElementById('user_name').value;
+      const email = document.getElementById('email').value;
+      const reservation_date = document.getElementById('reservation_date').value;
+
+      const body = JSON.stringify({ user_name, email, reservation_date });
+      const method = currentEditId ? 'PUT' : 'POST';
+      const url = currentEditId ? `${apiUrl}/${currentEditId}` : apiUrl;
+
+      const res = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body
+      });
+
+      const result = await res.json();
+      const msg = document.getElementById('formMessage');
+
+      if (res.ok) {
+        msg.textContent = result.message;
+        msg.className = 'success';
+        currentEditId = null;
+        document.getElementById('submitBtn').value = 'Réserver';
+        document.getElementById('bookingForm').reset();
+        fetchBookings();
+      } else {
+        msg.textContent = result.error || result.message || 'Erreur';
+        msg.className = 'error';
+      }
+    });
+
+    function editBooking(id, user_name, email, date) {
+      currentEditId = id;
+      document.getElementById('user_name').value = user_name;
+      document.getElementById('email').value = email;
+      document.getElementById('reservation_date').value = date.split('T')[0];
+      document.getElementById('submitBtn').value = 'Mettre à jour';
+    }
+
+    async function deleteBooking(id) {
+      if (!confirm('Supprimer cette réservation ?')) return;
+
+      const res = await fetch(`${apiUrl}/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        alert(result.message);
+        fetchBookings();
+      } else {
+        alert(result.error || result.message);
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
